@@ -1,0 +1,45 @@
+# Go
+# Build your Go project.
+# Add steps that test, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/go
+
+trigger: 
+ - master
+
+strategy:
+    matrix:
+        linux: 
+            imageName: 'ubuntu-16.04'
+        mac:
+            imageName: 'macOS-10.14'
+        windows:
+            imageName: 'vs2017-win2016'
+
+pool:
+   vmImage: $(imageName)
+
+steps: 
+- task: GoTool@0
+  inputs:
+    version: '1.13.5'
+- task: Go@0
+  displayName: 'Get'
+  inputs:
+    command: 'get'
+    arguments: '-d'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+- task: Go@0
+  displayName: 'Build'
+  inputs:
+    command: 'build'
+    arguments: '-ldflags "-s -w"'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+- task: CopyFiles@2
+  displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+  inputs:
+    Contents: 'just-for-go*'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish'
+  inputs:
+     artifactName: '$(imageName)'
